@@ -2,7 +2,7 @@
 <root>
     <relationship_number>0</relationship_number>
     <relationship>
-        <name>Subreddits and Posts</name>
+        <name>Subreddits</name>
         <connection>"Data Source=LAPTOP-LEO\SQLEXPRESS;Initial Catalog=Reddit2;Integrated Security=True"</connection>
         <master>
             <name>Subreddits</name>
@@ -15,9 +15,6 @@
 
         <slave>
             <name>Posts on Subreddit</name>
-            <maxId>
-            	<query>select max(PostId) from Posts</query>
-            </maxId>
             <select>
                 <query>Select * from Posts where SubredditId = {0}</query>
                 <numberOfParams>1</numberOfParams>

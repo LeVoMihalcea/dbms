@@ -3,165 +3,151 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.PerformanceData;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace assignment1_2
 {
     public partial class Form1 : Form
     {
-        private static string connectionString =
-                   @"Data Source=LAPTOP-LEO\SQLEXPRESS;Initial Catalog=Reddit2;Integrated Security=True";
-        SqlConnection sqlConnection = new SqlConnection(connectionString);
-        List<DTO> subreddits = null;
+        SqlConnection sqlConnection;
+        List<DTO> masterRows = null;
         private int nextId = 0;
+        private int configurationNumber = 0;
+        Relationship relationship = new Relationship();
+        RichTextBox[] richTextBoxes = new RichTextBox[100];
 
         public Form1()
         {
             InitializeComponent();
-            SqlDataAdapter sqlData = new SqlDataAdapter("Select * from Subreddits", sqlConnection);
+            loadConfigurationFromXml();
+
+            this.richTextBoxes[0] = this.richTextBox1;
+            this.richTextBoxes[1] = this.richTextBox2;
+            this.richTextBoxes[2] = this.richTextBox3;
+            this.richTextBoxes[3] = this.richTextBox4;
+            this.richTextBoxes[4] = this.richTextBox5;
+            this.richTextBoxes[5] = this.richTextBox6;
+            this.richTextBoxes[6] = this.richTextBox7;
+            this.richTextBoxes[7] = this.richTextBox8;
+
+            for (int i = 0; i < 8; i++)
+            {
+                richTextBoxes[i].Hide();
+            }
+
+            this.sqlConnection = new SqlConnection(relationship.connectionString);
+            SqlDataAdapter sqlData = new SqlDataAdapter(relationship.selectMaster, sqlConnection);
             DataTable dataTable = new DataTable();
             sqlData.Fill(dataTable);
-            this.Subreddit.DataSource = dataTable;
-            this.subreddits = dataTable.AsEnumerable()
+            this.Master.DataSource = dataTable;
+            this.masterRows = dataTable.AsEnumerable()
                .Select(property => new DTO(property[0].ToString(), property[1].ToString())).ToList();
             sqlConnection.Open();
-            SqlCommand comm = new SqlCommand("select max(PostId) from Posts", sqlConnection);
+            SqlCommand comm = new SqlCommand(relationship.selectMaxId, sqlConnection);
             Int32 count = (Int32)comm.ExecuteScalar();
             this.nextId = count + 1;
 
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.Subreddit.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            this.Subreddit.ReadOnly = true;
-            this.Posts.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            this.Posts.ReadOnly = true;
-            this.richTextBox1.Text = "PostId";
-            this.richTextBox2.Text = "UserId";
-            this.richTextBox3.Text = "PictureId";
-            this.richTextBox4.Text = "SubredditId";
-            this.richTextBox5.Text = "Title";
-            this.richTextBox6.Text = "PostText";
-            this.richTextBox7.Text = "Upvotes";
-            this.richTextBox8.Text = "Downvotes";
-            this.richTextBox1.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox1.Text == "PostId")
-                {
-                    this.richTextBox1.Text = "";
-                }
-            };
-            this.richTextBox2.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox2.Text == "UserId")
-                {
-                    this.richTextBox2.Text = "";
-                }
-            };
-            this.richTextBox3.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox3.Text == "PictureId")
-                {
-                    this.richTextBox3.Text = "";
-                }
-            };
-            this.richTextBox4.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox4.Text == "SubredditId")
-                {
-                    this.richTextBox4.Text = "";
-                }
-            };
-            this.richTextBox5.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox5.Text == "Title")
-                {
-                    this.richTextBox5.Text = "";
-                }
-            };
-            this.richTextBox6.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox6.Text == "PostText")
-                {
-                    this.richTextBox6.Text = "";
-                }
-            };
-            this.richTextBox7.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox7.Text == "Upvotes")
-                {
-                    this.richTextBox7.Text = "";
-                }
-            };
-            this.richTextBox8.GotFocus += (useless1, useless2) =>
-            {
-                if (this.richTextBox8.Text == "Downvotes")
-                {
-                    this.richTextBox8.Text = "";
-                }
-            };
+            Console.Out.WriteLine("starting app..");
+            
+        }
+
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        private void loadConfigurationFromXml()
+        {
+            XmlDocument configuration = new XmlDocument();
+            configuration.Load("configuration.xml");
+            var configurationNumberString = configuration.SelectSingleNode("root/relationship_number").InnerText;
+            var configurationNumber = int.Parse(configurationNumberString);
+            var relationshipNode = configuration.SelectNodes("root/relationship").Item(configurationNumber);
+
+            //for the given relationship, we create a new Relationship object which we use
+            //to store the queries from the xml
+            relationship.connectionString = relationshipNode.SelectSingleNode("connection").InnerText;
+            relationship.name = relationshipNode.SelectSingleNode("name").InnerText;
+            
+            
+            //master zone of the relationship
+            relationship.masterName = relationshipNode.SelectSingleNode("master/name").InnerText;
+            relationship.selectMaster = relationshipNode.SelectSingleNode("master/select/query").InnerText;
+
+            //slave zone on the relationship
+            relationship.slaveName = relationshipNode.SelectSingleNode("slave/name").InnerText;
+
+            relationship.selectMaxId = relationshipNode.SelectSingleNode("slave/maxId/query").InnerText;
+
+            relationship.attributes = Int32.Parse(relationshipNode.SelectSingleNode("slave/attributes").InnerText);
+
+            relationship.selectSlave = relationshipNode.SelectSingleNode("slave/select/query").InnerText;
+
+            relationship.insertSlave = relationshipNode.SelectSingleNode("slave/insert/query").InnerText;
+            relationship.insertSlaveParams = Int32.Parse(relationshipNode.SelectSingleNode("slave/insert/numberOfParams").InnerText);
+
+            relationship.updateSlave = relationshipNode.SelectSingleNode("slave/update/query").InnerText;
+            relationship.updateSlaveParams = Int32.Parse(relationshipNode.SelectSingleNode("slave/update/numberOfParams").InnerText);
+
+            relationship.deleteSlave = relationshipNode.SelectSingleNode("slave/delete/query").InnerText;
+            relationship.deleteSlaveParams = Int32.Parse(relationshipNode.SelectSingleNode("slave/delete/numberOfParams").InnerText);
         }
 
         private void Subreddit_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             fill_posts_table();
-            this.richTextBox4.Text = this.Subreddit.SelectedRows[0].Cells[0].Value.ToString();
+            for (int i = 0; i < 8; i++)
+            {
+                if (i < relationship.attributes)
+                {
+                    richTextBoxes[i].Show();
+                }
+                else
+                {
+                    richTextBoxes[i].Hide();
+                }
+            }
         }
 
         private void fill_posts_table()
         {
-            String id = this.Subreddit.SelectedRows[0].Cells[0].Value.ToString();
+            String id = this.Master.SelectedRows[0].Cells[0].Value.ToString();
             SqlDataAdapter sqlData =
-                new SqlDataAdapter("Select * from Posts where SubredditId = " + id, sqlConnection);
+                new SqlDataAdapter(String.Format(relationship.selectSlave, id), sqlConnection);
             DataTable dataTable = new DataTable();
             sqlData.Fill(dataTable);
-            this.Posts.DataSource = dataTable;
+            this.Slave.DataSource = dataTable;
         }
 
         private void Posts_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            String id = this.Posts.SelectedRows[0].Cells[0].Value.ToString();
-            String userId = this.Posts.SelectedRows[0].Cells[1].Value.ToString();
-            String pictureId = this.Posts.SelectedRows[0].Cells[2].Value.ToString();
-            String subredditId = this.Posts.SelectedRows[0].Cells[3].Value.ToString();
-            String title = this.Posts.SelectedRows[0].Cells[4].Value.ToString();
-            String postText = this.Posts.SelectedRows[0].Cells[5].Value.ToString();
-            String upvotes = this.Posts.SelectedRows[0].Cells[6].Value.ToString();
-            String downvotes = this.Posts.SelectedRows[0].Cells[7].Value.ToString();
-
-            this.richTextBox1.Text = id;
-            this.richTextBox2.Text = userId;
-            this.richTextBox3.Text = pictureId;
-            this.richTextBox4.Text = subredditId;
-            this.richTextBox5.Text = title;
-            this.richTextBox6.Text = postText;
-            this.richTextBox7.Text = upvotes;
-            this.richTextBox8.Text = downvotes;
-            
+            for (int i = 0; i < relationship.attributes; i++)
+            {
+                this.richTextBoxes[i].Text = this.Slave.SelectedRows[0].Cells[i].Value.ToString();
+            }
         }
 
         private void AddButton_Click(object sender, EventArgs e)
         {
-            string string_command = "insert Posts values ({0}, {1}, {2}, {3}, '{4}', '{5}', {6}, {7})";
-            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter("select * from Posts", this.sqlConnection);
-            sqlDataAdapter.InsertCommand = new SqlCommand(
+            string string_command = relationship.insertSlave;
 
-                string.Format(string_command, 
-                    this.richTextBox1.Text, 
-                    this.richTextBox2.Text, 
-                    this.richTextBox3.Text, 
-                    this.richTextBox4.Text, 
-                    this.richTextBox5.Text, 
-                    this.richTextBox6.Text, 
-                    this.richTextBox7.Text,
-                    this.richTextBox8.Text
-                ), this.sqlConnection);
+            String[] attributes_from_gui = new string[10];
+            for(int i=0; i<relationship.attributes; i++)
+            {
+                attributes_from_gui[i] = this.richTextBoxes[i].Text;
+            }
+            
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(relationship.selectSlave, this.sqlConnection);
+            sqlDataAdapter.InsertCommand = new SqlCommand(
+                string.Format(string_command, attributes_from_gui), 
+            this.sqlConnection);
             sqlDataAdapter.InsertCommand.Connection = this.sqlConnection;
-            //this.sqlConnection.Open();
             sqlDataAdapter.InsertCommand.ExecuteNonQuery();
             SqlCommand comm = new SqlCommand(string_command, sqlConnection);
             fill_posts_table();
@@ -170,8 +156,8 @@ namespace assignment1_2
 
         private void deleteButton_Click(object sender, EventArgs e)
         {
-            string string_command = "delete from Posts where PostId = {0}";
-            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter("select * from Posts", this.sqlConnection);
+            string string_command = relationship.deleteSlave;
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(relationship.selectSlave, this.sqlConnection);
             sqlDataAdapter.DeleteCommand = new SqlCommand(
 
                 string.Format(string_command,
@@ -187,42 +173,16 @@ namespace assignment1_2
 
         private void UpdateButton_Click(object sender, EventArgs e)
         {
-            string string_command = "update Posts " +
-                "set " +
-                "UserId = {1}," +
-                "PictureId = {2}," +
-                "SubredditId = {3}," +
-                "Title = '{4}'," +
-                "PostText = '{5}'," +
-                "Upvotes = {6}," +
-                "Downvotes = {7}" +
-                "where " +
-                "PostId = {0} ";
-            System.Console.WriteLine(string.Format(string_command,
-                    this.richTextBox1.Text,
-                    this.richTextBox2.Text,
-                    this.richTextBox3.Text,
-                    this.richTextBox4.Text,
-                    this.richTextBox5.Text,
-                    this.richTextBox6.Text,
-                    this.richTextBox7.Text,
-                    this.richTextBox8.Text
-                ));
-            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter("select * from Posts", this.sqlConnection);
+            string string_command = relationship.updateSlave;
+            String[] attributes_from_gui = new string[10];
+            for (int i = 0; i < relationship.attributes; i++)
+            {
+                attributes_from_gui[i] = this.richTextBoxes[i].Text;
+            }
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(relationship.selectSlave, this.sqlConnection);
             sqlDataAdapter.UpdateCommand = new SqlCommand(
-
-                string.Format(string_command,
-                    this.richTextBox1.Text,
-                    this.richTextBox2.Text,
-                    this.richTextBox3.Text,
-                    this.richTextBox4.Text,
-                    this.richTextBox5.Text,
-                    this.richTextBox6.Text,
-                    this.richTextBox7.Text,
-                    this.richTextBox8.Text
-                )
-           
-            );
+                string.Format(string_command, attributes_from_gui)
+            ); ;
             //this.sqlConnection.Open();
             sqlDataAdapter.UpdateCommand.Connection = this.sqlConnection;
             sqlDataAdapter.UpdateCommand.ExecuteNonQuery();

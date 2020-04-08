@@ -18,3 +18,13 @@ D:\Desktop\dbms\assignment1\assignment1-2\obj\Debug\assignment1-2.csproj.Generat
 D:\Desktop\dbms\assignment1\assignment1-2\obj\Debug\assignment1-2.csproj.CoreCompileInputs.cache
 D:\Desktop\dbms\assignment1\assignment1-2\obj\Debug\assignment1-2.exe
 D:\Desktop\dbms\assignment1\assignment1-2\obj\Debug\assignment1-2.pdb
+D:\Desktop\dbms\assignment2\assignment1-2\bin\Debug\assignment1-2.exe.config
+D:\Desktop\dbms\assignment2\assignment1-2\bin\Debug\assignment1-2.exe
+D:\Desktop\dbms\assignment2\assignment1-2\bin\Debug\assignment1-2.pdb
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1-2.csprojAssemblyReference.cache
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1_2.Form1.resources
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1_2.Properties.Resources.resources
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1-2.csproj.GenerateResource.cache
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1-2.csproj.CoreCompileInputs.cache
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1-2.exe
+D:\Desktop\dbms\assignment2\assignment1-2\obj\Debug\assignment1-2.pdb

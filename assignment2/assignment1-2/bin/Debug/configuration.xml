@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <relationship_number>1</relationship_number>
+    <relationship>
+        <name>Subreddits</name>
+        <connection>Data Source=LAPTOP-LEO\SQLEXPRESS;Initial Catalog=Reddit2;Integrated Security=True</connection>
+        <master>
+            <name>Subreddits</name>
+            <select>
+                <query>select * from Subreddits</query>
+            </select>
+        </master>
+
+        <slave>
+            <name>Posts on Subreddit</name>
+            <maxId>
+                <query>select max(PostId) from Posts</query>
+            </maxId>
+            <attributes>8</attributes>
+            <select>
+                <query>Select * from Posts where SubredditId = {0}</query>
+                <numberOfParams>1</numberOfParams>
+            </select>
+            <insert>
+                <query>insert Posts values ({0}, {1}, {2}, {3}, '{4}', '{5}', {6}, {7})</query>
+                <numberOfParams>4</numberOfParams>
+            </insert>
+            <update>
+                <query>update Posts set UserId = {1}, PictureId = {2}, SubredditId = {3}, Title = '{4}', PostText = '{5}', Upvotes = {6}, Downvotes = {7} where PostId = {0}</query>
+                <numberOfParams>8</numberOfParams>
+            </update>
+            <delete>
+                <query>delete from Posts where PostId = {0}</query>
+                <numberOfParams>1</numberOfParams>
+            </delete>
+        </slave>
+    </relationship>
+
+    <relationship>
+        <name>Posts</name>
+        <connection>Data Source=LAPTOP-LEO\SQLEXPRESS;Initial Catalog=Reddit2;Integrated Security=True</connection>
+        <master>
+            <name>Posts</name>
+            <select>
+                <query>select * from Posts</query>
+            </select>
+        </master>
+
+        <slave>
+            <name>Comments on Post</name>
+            <maxId>
+                <query>select max(CommentId) from Comments</query>
+            </maxId>
+            <attributes>5</attributes>
+            <select>
+                <query>Select * from Comments where PostId = {0}</query>
+                <numberOfParams>1</numberOfParams>
+            </select>
+            <insert>
+                <query>insert Comments values ({0}, {1}, '{2}', {3}, {4})</query>
+                <numberOfParams>5</numberOfParams>
+            </insert>
+            <update>
+                <query>update Comments set PostId = {1}, CommentText = '{2}', Upvotes = {3}, Downvotes = {4} where CommentId = {0}</query>
+                <numberOfParams>5</numberOfParams>
+            </update>
+            <delete>
+                <query>delete from Comments where CommentId = {0}</query>
+                <numberOfParams>1</numberOfParams>
+            </delete>
+        </slave>
+    </relationship>
+</root>
