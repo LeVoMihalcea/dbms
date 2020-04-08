@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <relationship_number>0</relationship_number>
+    <relationship>
+        <name>Subreddits</name>
+        <connection>"Data Source=LAPTOP-LEO\SQLEXPRESS;Initial Catalog=Reddit2;Integrated Security=True"</connection>
+        <master>
+            <name>Subreddits</name>
+            <select>
+                <query>
+                    select * from Subreddits
+                </query>
+            </select>
+        </master>
+
+        <slave>
+            <name>Posts on Subreddit</name>
+            <select>
+                <query>Select * from Posts where SubredditId = {0}</query>
+                <numberOfParams>1</numberOfParams>
+            </select>
+            <insert>
+                <query>insert Posts values ({0}, {1}, {2}, {3}, '{4}', '{5}', {6}, {7})</query>
+                <numberOfParams>8</numberOfParams>
+            </insert>
+            <update>
+                <query>update Posts set UserId = {1}, PictureId = {2}, SubredditId = {3}, Title = {4}, PostText = {5}, Upvotes = {6}, Downvotes = {7} where PostId = {0}</query>
+                <numberOfParams>8</numberOfParams>
+            </update>
+            <delete>
+                <query>delete from Posts where PostId = {0}</query>
+                <numberOfParams>1</numberOfParams>
+            </delete>
+        </slave>
+    </relationship>
+</root>
